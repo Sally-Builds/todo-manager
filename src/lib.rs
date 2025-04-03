@@ -95,16 +95,15 @@ pub fn fetch_data() -> HashMap<usize, Task> {
             let f = File::create("data.json");
             f.expect("Error Creating file")
         } else {
-            panic!("Error reading file")
+            panic!("Error opening file")
         }
     };
     let mut contents = String::new();
-    match file.read_to_string(&mut contents) {
-        Ok(_) => (),
-        Err(e) => {
-            panic!("Something went wrong: {}", e)
-        }
-    };
+     file.read_to_string(&mut contents).expect("Error reading file contents");
+
+     if contents.is_empty() {
+        return HashMap::new();
+     }
 
     let deserialized: HashMap<usize, Task>  = serde_json::from_str(&contents).expect("Error reading file contents");
 
@@ -113,11 +112,13 @@ pub fn fetch_data() -> HashMap<usize, Task> {
 
 
 pub fn save_data(list: &mut HashMap<usize, Task>) {
-    let serialized_data = serde_json::to_string(list).expect("Error saving data");
+    let serialized_data = serde_json::to_string_pretty(list).expect("Error saving data");
 
-    let mut file = File::open("data.json").expect("error: saving file");
+    let mut file = File::create("data.json").expect("error: saving file");
 
-    file.write(serialized_data.as_bytes()).expect("error writing to file");
+    println!("{}", serialized_data);
+
+    file.write_all(serialized_data.as_bytes()).expect("error writing to file");
     
 }
 #[cfg(test)]
